@@ -31,17 +31,21 @@ install(FILES
 # Need Windows sockets if available
 find_package(WinSock)
 if (WINSOCK_FOUND)
-  target_link_libraries(civetweb-c-library WINSOCK::WINSOCK)
+  target_link_libraries(civetweb-c-library PUBLIC WINSOCK::WINSOCK)
 endif()
 
 # We need threading
 find_package(Threads)
-target_link_libraries(civetweb-c-library ${CMAKE_THREAD_LIBS_INIT})
+if(HUNTER_ENABLED)
+  target_link_libraries(civetweb-c-library PUBLIC Threads::Threads)
+else()
+  target_link_libraries(civetweb-c-library ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 # Need the realtime library if we're using timers
 find_package(LibRt)
 if (CIVETWEB_ENABLE_WEBSOCKETS AND CIVETWEB_ENABLE_LUA AND LIBRT_FOUND)
-  target_link_libraries(civetweb-c-library LIBRT::LIBRT)
+  target_link_libraries(civetweb-c-library PUBLIC LIBRT::LIBRT)
 endif()
 
 # We need to link OpenSSL if not dynamically loading
@@ -49,7 +53,7 @@ if (CIVETWEB_ENABLE_SSL)
   if (CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING)
     find_package(LibDl)
     if (LIBDL_FOUND)
-      target_link_libraries(civetweb-c-library -ldl)
+      target_link_libraries(civetweb-c-library PUBLIC -ldl)
     endif()
   else()
     if(HUNTER_ENABLED)
@@ -58,7 +62,7 @@ if (CIVETWEB_ENABLE_SSL)
     find_package(OpenSSL)
     include_directories(${OPENSSL_INCLUDE_DIR})
     message(STATUS "OpenSSL include directory: ${OPENSSL_INCLUDE_DIR}")
-    target_link_libraries(civetweb-c-library ${OPENSSL_LIBRARIES})
+    target_link_libraries(civetweb-c-library PUBLIC ${OPENSSL_LIBRARIES})
   endif()
 endif()
 
@@ -248,7 +252,7 @@ if (CIVETWEB_ENABLE_LUA)
   add_dependencies(civetweb-c-library sqlite)
 
   # Link all the Lua libraries
-  target_link_libraries(civetweb-c-library ${LUA_LIBRARIES})
+  target_link_libraries(civetweb-c-library PUBLIC ${LUA_LIBRARIES})
 endif()
 
 # The web server executable
